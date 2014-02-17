@@ -1,0 +1,18 @@
+.ioDiv{
+	margin: 0px;
+	padding: 2px;
+	border-width: 0px;
+	display: inline-block;
+}
+
+.ioTextarea{
+	width: 460px;
+	height: 400px;
+	border-width: 1px;
+	resize: none;
+}
+
+body{
+	-webkit-user-select: text;
+	user-select: text;
+}
