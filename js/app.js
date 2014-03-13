@@ -14,12 +14,11 @@ var socket;
 var profile = {"uuid": "00001101-0000-1000-8000-00805F9B34FB"};
 
 function init(){
-	chrome.bluetooth.getDevices({
-	    deviceCallback: function(device) {
-	        $("#deviceSelection").append("<option value='"+device.address+"'>"+device.name+"</option>");
-	        devices[device.address] = device;
+	chrome.bluetooth.getDevices(function(d) {
+		for (var i in d){
+	        $("#deviceSelection").append("<option value='"+d[i].address+"'>"+d[i].name+"</option>");
+	        devices[d[i].address] = d[i];
 	    }
-	}, function(){
 	});
 }
 
@@ -37,6 +36,11 @@ function deviceSelect(){
 		disconnect();
 	}
 }
+
+function connectCallback(socket){
+	connectedCallback(socket);
+};
+chrome.bluetooth.onConnection.addListener(connectCallback);
 
 function connectedCallback(s){console.log(s);
 	socket = s;
