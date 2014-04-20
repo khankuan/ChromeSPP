@@ -47,16 +47,16 @@ function connectedCallback(s){console.log(s);
 	$('#inputTextarea').val("");
 	$('#outputTextarea').val("");
 	$("#connectButton").html("Disconnect");
-
-	deviceInterval = setInterval(function(){
-	    chrome.bluetooth.read({socket:socket}, function(arraybuffer){
-	    	var str = ab2str(arraybuffer);console.log(str);
-	    	if (str.length > 0)
-	    		$("#outputTextarea").val($("#outputTextarea").val()+str);
-	    });
-	},100);
 }
+
+function receiveCallback(info){
+  	var str = ab2str(info.data);console.log(str);
+	if (str.length > 0)
+		$("#outputTextarea").val($("#outputTextarea").val()+str);
+};
+
 chrome.bluetooth.onConnection.addListener(connectedCallback);
+chrome.bluetooth.onReceive.addListener(receiveCallback);
 
 function connect(){
 	var address = $('#deviceSelection').val();
@@ -75,7 +75,7 @@ function disconnect(){
 	$("#connectButton").html(status);
 	clearInterval(deviceInterval);
 	var address = $('#deviceSelection').val();
-	chrome.bluetooth.disconnect({socket: socket}, function(err){
+	chrome.bluetooth.disconnect({socketId: socket}, function(err){
         if (chrome.runtime.lastError)
      		console.log(chrome.runtime.lastError.message);
 		status = "Connect";
@@ -101,18 +101,16 @@ function sendWithDelimiter(){
 }
 
 function sendString(str){
-	chrome.bluetooth.write({socket:socket, data:str2ab(str)},
-		function(bytes) {
-			if (chrome.runtime.lastError) 
-				console.log('Write error: ' + chrome.runtime.lastError.message);
-			else {
-				$("#inputString").val("");
-				$("#inputStringDelimiter").val("");
-				$("#inputTextarea").val($("#inputTextarea").val()+str);
-			}
-	});
-    if (chrome.runtime.lastError)
-      console.error("Error writing.", chrome.runtime.lastError.message);
+
+	chrome.bluetooth.send(socket.id, str2ab(msg), function(bytes) {
+      	if (chrome.runtime.lastError) 
+			console.log('Write error: ' + chrome.runtime.lastError.message);
+		else {
+			$("#inputString").val("");
+			$("#inputStringDelimiter").val("");
+			$("#inputTextarea").val($("#inputTextarea").val()+str);
+		}
+    });
 }
 
 
@@ -125,14 +123,13 @@ function sendByte(){
   	var bufView = new Uint8Array(buf);
   	bufView[0] = parseInt(ascii);
 
-	chrome.bluetooth.write({socket:socket, data: buf},
-		function(bytes) {
-			if (chrome.runtime.lastError) 
-				console.log('Write error: ' + chrome.runtime.lastError.message);
-			else {
-				$("#inputByte").val("");
-				$("#inputTextarea").val($("#inputTextarea").val()+String.fromCharCode(bufView[0]));
-			}
+	chrome.bluetooth.send(socket.id, buf, function(bytes) {
+		if (chrome.runtime.lastError) 
+			console.log('Write error: ' + chrome.runtime.lastError.message);
+		else {
+			$("#inputByte").val("");
+			$("#inputTextarea").val($("#inputTextarea").val()+String.fromCharCode(bufView[0]));
+		}
 	});
     if (chrome.runtime.lastError)
       console.error("Error writing.", chrome.runtime.lastError.message);
